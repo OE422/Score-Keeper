@@ -13,7 +13,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
     var timer = Timer()
     var timerLabel = UILabel()
     var scoreLabel = UILabel()
-    var tapsPerSec = UILabel()
+    var pointsPerSec = UILabel()
+    var pointsPerSec2 = UILabel()
     var scoreLabel2 = UILabel()
     var challenge = UILabel()
     var nameField = UITextField()
@@ -31,6 +32,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     var s2 = "Player 2"
     var count = 0.0//timer counting
     var whichNameCounter = 0 //used for UITextField to diffrentiate between players 1 & 2
+    var timerStarter = 0//since the timer begins when the "Add 1" button is pressed, there needs to be a control that stops the timer from starting every time the button is pressed
     override func viewDidLoad() {
         super.viewDidLoad()
         self.becomeFirstResponder()
@@ -71,12 +73,19 @@ class ViewController: UIViewController, UITextFieldDelegate {
         timerLabel.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((timerLabel.frame.maxX-timerLabel.frame.minX)/2), y: 170)
         self.view.addSubview(timerLabel)
         
-        tapsPerSec.textColor = UIColor.black
-        tapsPerSec.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        tapsPerSec.text = "0"
-        tapsPerSec.sizeToFit()
-        tapsPerSec.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((tapsPerSec.frame.maxX-tapsPerSec.frame.minX)/2), y: 470)
-        self.view.addSubview(tapsPerSec)
+        pointsPerSec.textColor = UIColor.black
+        pointsPerSec.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        pointsPerSec.text = "Player 1 points per second:"
+        pointsPerSec.sizeToFit()
+        pointsPerSec.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((pointsPerSec.frame.maxX-pointsPerSec.frame.minX)/2), y: 490)
+        self.view.addSubview(pointsPerSec)
+        
+        pointsPerSec2.textColor = UIColor.black
+        pointsPerSec2.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        pointsPerSec2.text = "Player 2 points per second:"
+        pointsPerSec2.sizeToFit()
+        pointsPerSec2.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((pointsPerSec.frame.maxX-pointsPerSec.frame.minX)/2), y: 512)
+        self.view.addSubview(pointsPerSec2)
         
         pointIncrease.setTitle("Add 1", for: .normal)
         pointIncrease.sizeToFit()
@@ -84,6 +93,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
         pointIncrease.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .bold)
         pointIncrease.setTitleColor(UIColor.black, for: .normal)
         pointIncrease.addTarget(self, action: #selector(self.pressed), for: .touchUpInside)
+        
+//        pointIncrease.layer.cornerRadius = 5
+//        pointIncrease.layer.borderWidth = 2.0
+//        pointIncrease.layer.borderColor = UIColor.darkGray.cgColor
         self.view.addSubview(pointIncrease)
         
         pointDecrease.setTitle("Subtract 1", for: .normal)
@@ -126,7 +139,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     @objc func pressed (sender: UIButton!)
     {
-//        var timer = Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: Selector("update"), userInfo: nil, repeats: true)
+        if (timerStarter == 0)
+        {
+            timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(UIMenuController.update), userInfo: nil, repeats: true)
+            timerStarter+=1
+        }
     
         score+=1
         addSub1AndCenter(arg: scoreLabel, arg: score, arg: name)
@@ -139,9 +156,14 @@ class ViewController: UIViewController, UITextFieldDelegate {
             addSub1AndCenter(arg: scoreLabel, arg: score, arg: name)
         }
     }
-    
     @objc func pressedv2 (sender: UIButton!)
     {
+        if (timerStarter == 0)
+        {
+            timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(UIMenuController.update), userInfo: nil, repeats: true)
+            timerStarter+=1
+        }
+        
         score2+=1
         addSub1AndCenter(arg: scoreLabel2, arg: score2, arg: name2)
     }
@@ -153,17 +175,54 @@ class ViewController: UIViewController, UITextFieldDelegate {
             addSub1AndCenter(arg: scoreLabel2, arg: score2, arg: name2)
         }
     }
-}
-//    func update()
-//    {
-//        count += 0.01
-
     @objc func resetPress (sender: UIButton!)
     {
         score = 0
         score2 = 0
+        timerStarter = 0
+        count = 0
+        pointIncrease.isEnabled = true
+        pointDecrease.isEnabled = true
+        pointIncrease2.isEnabled = true
+        pointDecrease2.isEnabled = true
         addSub1AndCenter(arg: scoreLabel, arg: score, arg: name)
         addSub1AndCenter(arg: scoreLabel2, arg: score2, arg: name2)
+        timer.invalidate()
+    }
+    @objc func update ()
+    {
+        if (Int(count) == 30)
+        {
+            timer.invalidate()
+            pointIncrease.isEnabled = false
+            pointDecrease.isEnabled = false
+            pointIncrease2.isEnabled = false
+            pointDecrease2.isEnabled = false
+        }
+        else
+        {
+            count += 0.1
+            pointsPerSec.text = "\(s1)'s points per second: \((round(100.0 * Double(score)/count)/100.0))"
+            pointsPerSec.textAlignment = NSTextAlignment.center
+            pointsPerSec.sizeToFit()
+            pointsPerSec.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((pointsPerSec.frame.maxX-pointsPerSec.frame.minX)/2), y: pointsPerSec.frame.origin.y)
+            pointsPerSec2.text = "\(s2)'s points per second: \((round(100.0 * Double(score2)/count)/100.0))"
+            pointsPerSec2.textAlignment = NSTextAlignment.center
+            pointsPerSec2.sizeToFit()
+            pointsPerSec2.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((pointsPerSec2.frame.maxX-pointsPerSec2.frame.minX)/2), y: pointsPerSec2.frame.origin.y)
+            if Int(count) > 20
+            {
+                timerLabel.text = "0:0\(30-Int(count))"
+            }
+            else
+            {
+                timerLabel.text = "0:\(30-Int(count))"
+            }
+            timerLabel.textAlignment = NSTextAlignment.center
+            timerLabel.sizeToFit()
+            timerLabel.frame.origin = CGPoint(x: (UIScreen.main.bounds.width/2)-((timerLabel.frame.maxX-timerLabel.frame.minX)/2), y: timerLabel.frame.origin.y)
+        }
+        
     }
     func addSub1AndCenter(arg UILbl: UILabel, arg points: Int, arg name: String)
     {
